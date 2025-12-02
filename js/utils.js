@@ -41,24 +41,24 @@ function escapeHtml(text) {
 }
 
 function extractFileInfo(filename) {
-  // render.js에서 사용
-  // 파일 이름에서 정보 추출하는 함수
-
-  // 정규 표현식을 사용하여 날짜, 제목, 카테고리, 썸네일, 저자 정보 추출
   const regex =
-    /^\[(\d{8})\]_\[(.*?)\]_\[(.*?)\]_\[(.*?)\]_\[(.*?)\]_\[(.*?)\].(md|ipynb)$/;
+      /^\[(\d{8})\]_\[(.*?)\]_\[(.*?)\]_\[(.*?)\]_\[(.*?)\]_\[(.*?)\].(md|ipynb)$/;
   const matches = filename.match(regex);
-  // console.log(`extractFileInfo: ${matches}`);
 
   if (matches) {
+    // 썸네일 원본 문자열 (예: 'cors__cors.png')
+    const rawThumbnail = matches[4];
+
+    // '__' → '/' 로 디코딩해서 실제 경로로 사용
+    const thumbnailPath = rawThumbnail
+        ? "img/" + rawThumbnail.replace(/__/g, "/")
+        : `img/thumb${Math.floor(Math.random() * 10) + 1}.webp`;
+
     return {
       date: matches[1],
       title: matches[2],
       category: matches[3],
-      thumbnail: matches[4]
-        ? "img/" + matches[4]
-        : `img/thumb${Math.floor(Math.random() * 10) + 1}.webp`,
-      // description: matches[5].length > 25 ? matches[5].substring(0, 25) + '...' : matches[5],
+      thumbnail: thumbnailPath,
       description: matches[5],
       author: matches[6] ? parseInt(matches[6]) : 0,
       fileType: matches[7],
@@ -66,6 +66,7 @@ function extractFileInfo(filename) {
   }
   return null;
 }
+
 
 function formatDate(dateString) {
   // render.js에서 사용
