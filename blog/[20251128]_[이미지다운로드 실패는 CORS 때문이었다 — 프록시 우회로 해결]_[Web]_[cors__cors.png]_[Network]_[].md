@@ -38,7 +38,7 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
 <br>
 
 ### 다른 출처(Cross-Origin) 예시
-1. ***프로토콜이 다른 경우***  
+***1. 프로토콜이 다른 경우***  
 
 
 | URL | 차이|
@@ -46,7 +46,7 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
 |http://clboard.com  | 프로토콜: http → 다른 출처 |
 |https://clboard.com| 프로토콜: https     |
 
-2. ***도메인이 다른 경우***
+***2. 도메인이 다른 경우***
 
 
 | URL | 차이|
@@ -54,7 +54,7 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
 |https://api.clboard.com | 서브도메인이 달라짐 → 다른 출처 |
 |https://cdn.clboard.com|     |
 
-3. ***포트가 다른 경우***
+***3. 포트가 다른 경우***
 
 
 | URL                      | 차이|
@@ -66,7 +66,7 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
 그 리소스 서버가 명시적으로 접근을 허용하지 않으면 요청을 차단합니다.
   
 ***  
-  
+<br>  
 <br>
 
 # 이렇게 해결 해 나갔습니다.
@@ -139,7 +139,7 @@ Access-Control-Allow-Origin: *
 - 결국에는 브라우저가 이 바이트 데이터를 우리 서버가 보냇기 때문에 <strong>Same-Origin</strong> 리소스로 판단  
 
 ***
-  
+<br>
 <br>
 
 # 마무리하며
