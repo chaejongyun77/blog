@@ -126,8 +126,8 @@ html2canvas는 매우 편리한 라이브러리지만,
 
 ![
 다운로드 성공
-](/img/cors/download1.png)
+](./img/cors/download1.png)
 
 ![
 다운로드 결과
-](/img/cors/download2.png)
+](./img/cors/download2.png)
