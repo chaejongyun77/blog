@@ -33,11 +33,12 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
 |-----|----|
 |https://clboard.com/page  |기준 URL이 https://clboard.com 일 때 완전히 동일 |
 |https://clboard.com/detail?id=1|Path, Query는 달라도 origin 영향 없음|
- |https://clboard.com:443/profile| HTTPS 기본 포트 443|
+|https://clboard.com:443/profile| HTTPS 기본 포트 443|
+
 <br>
 
 ### 다른 출처(Cross-Origin) 예시
-1. 프로토콜이 다른 경우  
+1. ***프로토콜이 다른 경우***  
 
 
 | URL | 차이|
@@ -45,7 +46,7 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
 |http://clboard.com  | 프로토콜: http → 다른 출처 |
 |https://clboard.com| 프로토콜: https     |
 
-2. 도메인이 다른 경우
+2. ***도메인이 다른 경우***
 
 
 | URL | 차이|
@@ -53,7 +54,7 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
 |https://api.clboard.com | 서브도메인이 달라짐 → 다른 출처 |
 |https://cdn.clboard.com|     |
 
-3. 포트가 다른 경우
+3. ***포트가 다른 경우***
 
 
 | URL                      | 차이|
@@ -66,6 +67,7 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
   
 ***  
   
+<br>
 
 # 이렇게 해결 해 나갔습니다.
 <br>
@@ -74,7 +76,7 @@ html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현
 > cors 허용헤더를 추가해주자!
 
 우리 서비스 CDN에 저장된 리소스들은
-서버 측에서 응답 헤더에 CORS 허용을 추가하여 문제를 해결할 수 있었습니다.
+**서버 측에서 응답 헤더에 CORS 허용을 추가**하여 문제를 해결할 수 있었습니다.
 ```aiignore
 Access-Control-Allow-Origin: *
 ```
@@ -138,7 +140,7 @@ Access-Control-Allow-Origin: *
 
 ***
   
-  
+<br>
 
 # 마무리하며
 html2canvas는 편리한 라이브러리지만 브라우저의 CORS 정책과 맞물리면 예상치 못한 제약이 생길 수 있다는걸 알게되었습니다. 
@@ -147,7 +149,7 @@ html2canvas는 편리한 라이브러리지만 브라우저의 CORS 정책과 �
 
 이번 문제는 CDN 리소스는 서버 헤더 수정으로 해결 가능했지만 외부 사이트 리소스는 해당 서버의 정책을 바꿀 수 없기 때문에 백엔드 프록시를 통해 동일 출처로 변환하는 방식으로 해결했습니다.
 
-결과적으로 외부 이미지가 포함된 페이지라도 문제없이 DOM 전체를 이미지로 변환할 수 있게 되었고 악명높은 CORS에러를 해결할 수 있어서 뿌듯했습니다.
+결과적으로 외부 이미지가 포함된 페이지라도 문제없이 DOM 전체를 이미지로 변환할 수 있게 되었고 악명높은 CORS 에러를 해결할 수 있어서 뿌듯했습니다.
 
 ![
 다운로드 성공
