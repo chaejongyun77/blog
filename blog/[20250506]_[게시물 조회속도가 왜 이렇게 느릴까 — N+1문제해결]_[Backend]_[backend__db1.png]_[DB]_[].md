@@ -1,160 +1,244 @@
 # 문제 상황과 진행 배경
-> "이미지로 다운로드가 왜 안되지?"
+> "게시물 로딩이 너무 느리다는데요?"
 
-사용자가 현재 보고 있는 화면을 그대로 이미지로 저장하기 위해
-html2canvas와 toBlob()을 사용해 DOM 전체를 캡처하는 기능을 구현했습니다.
-기능 자체는 복잡하지 않았지만 실제로 다운로드를 실행했을 때 이미지 생성이 되지 않는 문제가 발생했습니다.
+프로젝트 운영 과정에서 사용자가 특정 게시판에 진입할 때 화면 로딩이 지나치게 오래걸린다는 VOC가 들어온 적이 있었습니다.
+특히 게시물이 많거나 게시물 안에 이미지와 같은 요소들이 첨부된 경우 증상이 심해졌고 사용자 입장에서는 페이지가 멈춘 것 같다고 느낄정도로 성능이 저하되는 상황이었습니다.
 
-브라우저 개발자 도구에서 로그를 확인해보니
-여러 이미지 리소스 로딩 시 **CORS origin** 오류가 발생하고 있었습니다.
-정확히는 DOM 캡처 과정에서 일부 이미지가 정상적으로 로딩되지 않아 캔버스가 생성되지 않았습니다.
+문제를 파악하기 위해 브라우저 개발자도구의 네트워크 탭에서 모든 API의 응답속도를 확인 해 어떤 API가 부하를 일으키고 있는지 확인하는 작업을 하였습니다.
+그 결과, 게시물 목록을 불러오는 API가 최대 6초까지 걸리는 비정상적인 지연이 발생하고 있다는 점을 발견하였습니다.
 
-이 포스팅에서는 해당 문제가 왜 발생했는지
-그리고 어떻게 해결했는지 정리해보려 합니다.
+원인이 무엇인지 추적하기 위해 해당 API에서 사용하는 DB 조회 쿼리를 분석하였는데 여기서 N+1 문제가 존재한다는 것을 확인할 수 있었습니다.
+
+구체적으로는
+- 게시물을 먼저 조회한 뒤
+- 각 게시물에 포함된 이미지를 조회
+
+즉, 게시물이 100개가 있고 그 안에 각각 이미지가 다 들어가있다고 가정하면
+- 게시물 조회 -> 1번
+- 이미지 조회 -> 100번
+
+이런식으로 총 101번의 쿼리가 실행되는 비효율적인 구조를 가지고 있었다. 따라서 이러한 문제를 해결하기 위해 쿼리 구조를 개선하여 N+1 문제를
+해결하는 작업을 진행하게 되었습니다.
 
 ***
 <br>
 
-# CORS Origin은 무엇인가?
-<strong>CORS(Cross-Origin Resource Sharing)</strong>는
-브라우저가 보안상의 이유로 다른 출처(origin) 에 있는 리소스에 접근할 때
-그 요청을 허용할지 판단하는 규칙입니다.
+# JPA의 N+1이란 무엇인가?
+> 쿼리가 왜 추가적으로 발생하는걸까...
 
-출처는 다음 **세 요소**로 구성됩니다.
-
-- 프로토콜 (https/http)
-- 도메인 (clboard.co.kr)
-- 포트(80, 443)
+JPA의 N+1 문제는 연관관계가 있는 엔티티를 조회할 때 조회된 개수의 N개 만큼 추가적인 쿼리가 발생하는 문제입니다.
+  
+일단 어떠한 상황에서 JPA의 N+1문제가 발생하는지 상황을 알아보겠습니다.
 
 
-### 같은 출처(Same-Origin) 예시
+![
+Vote - VoteOption 엔티티 1:N 양방향 관계
+](./img/backend/vote.png)
 
-| URL | 이유 |
-|-----|----|
-|https://clboard.com/page  |기준 URL이 https://clboard.com 일 때 완전히 동일 |
-|https://clboard.com/detail?id=1|Path, Query는 달라도 origin 영향 없음|
-|https://clboard.com:443/profile| HTTPS 기본 포트 443|
+#### 엔티티
+- Vote 게시물 1, 2, 3 엔티티가 존재한다고 가정
+- 각 Vote 게시물 안에는 VoteOptions(투표옵션)이 속해있는 상황
 
-<br>
+#### 비즈니스 요구 사항
+- 각 Vote 게시물 안에 포함되어 있는 VoteOptions을 보여주세요.
 
-### 다른 출처(Cross-Origin) 예시
-***1. 프로토콜이 다른 경우***
+이러한 요구사항이 존재한다고 할 때 테스트코드로 한번 구현해보겠습니다.
 
+## JPA N+1 테스트
 
-| URL | 차이|
-|-----|-----|
-|http://clboard.com  | 프로토콜: http → 다른 출처 |
-|https://clboard.com| 프로토콜: https     |
+#### 테스트코드
+```java
+    // ----- when: Vote 목록만 조회 (voteOptions는 아직 안 가져옴, LAZY) -----
+        val votes = entityManager.createQuery(
+            "SELECT v FROM tb_vote v",
+            Vote::class.java
+        ).resultList
 
-***2. 도메인이 다른 경우***
+        // ----- then: 여기서 voteOptions 접근하면서 Vote마다 추가 쿼리 발생 -----
+        for (vote in votes) {
+            // 이 시점에 Hibernate 가
+            // select ... from tb_vote_option where vote_id = ?
+            // 를 Vote 개수만큼 날림
+            val options = vote.voteOptions
+            println("question=${vote.question}, options=${options.map { it.content }}")
+        }
+```
 
+- 모든 Vote 목록을 조회
+- 각 Vote에 해당하는 VoteOptions의 내용을 출력
 
-| URL | 차이|
-|-----|-----|
-|https://api.clboard.com | 서브도메인이 달라짐 → 다른 출처 |
-|https://cdn.clboard.com|     |
+#### 테스트결과
+![
+Vote 게시물 조회 
+](./img/backend/selectVote.png)
 
-***3. 포트가 다른 경우***
+![
+VoteOptions 조회
+](./img/backend/voteOptions.png)
 
+결과를 살펴보면 모든 Vote 게시물을 조회하는 쿼리 1개와 각 Vote 게시물에 포함된 VoteOptions 조회 쿼리가 여러번 실행되는 것을 확인할 수 있습니다.
 
-| URL                      | 차이|
-|--------------------------|-----|
-| https://clboard.com:5173 | 포트 다름 → 다른 출처 |
-| https://clboard.com:8080 |      |
+- <span style="color:red"> 모든 Vote 게시물 조회 : 1번 </span> 
+- <span style="color:red">각 Vote 게시물에 포함된 VoteOptions 조회 : N번 </span> 
 
-즉, 브라우저는 다른 출처의 이미지나 스크립트를 불러올 때
-그 리소스 서버가 명시적으로 접근을 허용하지 않으면 요청을 차단합니다.
+따라서 Vote 게시물에 포함된 VoteOptions이 더 많을 수록 1+N 번만큼의 쿼리가 추가적으로 발생하게 됩니다.
+  
+## N+1문제 원인 상세 분석
+> 연관관계를 자동으로 처리하기 위해 사용하는 LAZY 로딩 전략
 
-***  
-<br>  
-<br>
+JPA는 ORM(Object Relational Mapping) 기술로
+데이터베이스 테이블을 엔티티로 매핑하여 다루는 방식을 사용합니다.
+개발자는 SQL을 직접 작성하는 대신 엔티티 객체와 연관관계를 통해 데이터를 조회하고 조작하게 됩니다.
+
+문제는 이 과정에서 JPA가 연관된 엔티티를 언제 그리고 어떤 방식으로 로딩할 것인지를 자동으로 결정한다는 점입니다.
+특히 연관관계(@OneToMany, @ManyToOne 등)에 기본 설정되어 있는 지연 로딩(LAZY) 은 N+1 문제의 가장 대표적인 원인입니다.
+
+지연 로딩은 “필요한 순간까지 연관 엔티티를 조회하지 않는다”는 전략입니다.
+예를 들어 Vote 엔티티를 조회하면 JPA는 VoteOption 컬렉션을 즉시 가져오지 않고
+프록시 객체만 넣어둔 뒤 실제로 vote.voteOptions 에 접근하는 순간 별도의 SQL을 추가로 실행합니다.
+
+이 방식은 개별 조회 상황에서는 효율적일 수 있지만
+다수의 엔티티를 한 번에 조회하는 상황에서는 쿼리가 엔티티 개수만큼 반복 실행되며 성능 문제가 발생합니다.
+
+## 그렇다면 JPA가 왜 이렇게 설계햇을까?
+> 애초에 JOIN 해서 한 번에 가져오면 N+1 문제도 안 생기고 더 좋은 것 아닌가?
+
+ORM이 지향하는 철학과 실제 데이터 사용패턴을 고려하면 자동 JOIN 전략이 오히려 더 큰 문제를 만들어내기 때문에 현재의 설계가 적용되었다고 합니다.
+
+이러한 설계의 핵심이유를 알아보겠습니다.
+1. 모든 검색을 자동 JOIN하면 많은 양의 데이터를 조회
+예를 들면 다음과 같은 엔티티 구조가 있다고 가정해봅시다.
+```
+Post 1 --- N Comment (댓글)
+     1 --- N Image (이미지)
+     1 --- N Tag (태그)
+     1 --- N Like (좋아요)
+```
+하나의 포스트 안에 댓글과 이미지 그리고 태그와 좋아요가 있을때 만약 포스트 한개를 조회하게 된다면 어떻게 될까?
+Post 한 개를 조회하는데 관련된 테이블까지 전부 JOIN해서 가져오기 때문에 
+- Post 1개
+- Comment 10개
+- Image 5개
+- Tag 3개
+를 join하면 1 X 10 X 5 X 3 = 150개의 row를 조회하게 됩니다.
+
+2. Entity는 객체이므로 SQL처럼 단순히 JOIN하면 안된다.
+> 객체 동일성을 보장해야한다.
+
+JPA는 어떤 엔티티든 동일한 primary key를 가진 객체는 같은 객채여야합니다. 만약 다른 객체라면?
+- 캐싱이 안됨
+- 변경 감지가 안됨
+- 트랜잭션에서 변경사항 추적 불가
+즉 ORM 자체가 성립이 될 수 없습니다.
+
+아래와 같은 상황이 있다고 가정해봅시다.
+
+**Post 테이블**
+
+| id | title |
+|----|------|
+| 1  | 공지사항 |
+
+**Comment 테이블**
+
+| id | post_id | content|
+|----|---------|-----|
+| 10 | 1       | "좋은 글이네요"|
+| 11 | 1       |  "감사합니다" |
+
+Post + Comment를 한번에 조회한다고 가정했을때 JOIN결과는 다음과 같습니다.
+```
+SELECT *
+FROM post p
+JOIN comment c ON c.post_id = p.id
+WHERE p.id = 1;
+```
+
+| p.id | p.title   | c.id | c.content       |
+|------|-----------|------|-----------------|
+| 1    | 공지사항  | 10   | 좋은 글이네요   |
+| 1    | 공지사항  | 11   | 감사합니다      |
+
+여기서 문제는 JOIN 결과가 Post 1개가 아니라 2개의 row로 표시되기 때문에 만약 ORM이 JOIN결과를 보고 단순히 객체를 만든다면 
+```java
+val postA = Post(id = 1, title = "공지사항", comments = [...])
+val postB = Post(id = 1, title = "공지사항", comments = [...])
+```
+위와 같이 Post 객체가 두개가 만들어져 객체의 동일성이 깨져버리는 현상이 나타납니다.
+
+3. LAZY 전략이 기본값이 되어야한다.
+>Eager 전략이 아닌 LAZY 전략인 이유는 뭘까
+
+지금과 같이 엔티티가 얽혀 있는 구조에서 불필요한 JOIN을 방지하고 필요한 순간에만 데이터를 가져오게 하려면 LAZY 전략은 필수입니다.
+만약에 모든 것을 EAGER 전략으로 가져오게 된다면
+- 조회 성능이 급격히 저하 될 수 있다.
+- 연쇄적으로 JOIN이 일어나 row 수가 늘어날 수 있다.
+- JPA가 내부적으로 여러번의 중복 JOIN을 생성할 수 있다.
+
+따라서 기본적으로 예외적인 상황을 제외하면 LAZY 전략을 사용하라는 것이 기본 원칙입니다. (아마도 맞을겁니다..)
 
 # 이렇게 해결 해 나갔습니다.
-<br>
-
-## 첫 번째 시도 : CDN 리소스에 CORS헤더추가
-> cors 허용헤더를 추가해주자!
-
-우리 서비스 CDN에 저장된 리소스들은
-**서버 측에서 응답 헤더에 CORS 허용을 추가**하여 문제를 해결할 수 있었습니다.
-```aiignore
-Access-Control-Allow-Origin: *
-```
-
-이렇게 하면 html2canvas가 CDN 이미지를 가져와도 캔버스가 오염되지 않았습니다.
-
-하지만 문제는 제가 관리할 수 없는 <strong>외부 도메인</strong>의 이미지였습니다.
-해당 서버의 CORS 정책에 접근할 수 없기 때문에
-어떠한 설정도 적용할 수 없었습니다.
-
-이 경우 html2canvas는 계속해서 오류를 발생시켰습니다.
 
 <br>
 
-## 두 번째 시도 : 백엔드 프록시를 통한 동일 출처화 처리
-> 외부가 아닌 우리 서버에서 온 것!
+### fetchJoin 사용  
 
-방향을 다음과 같이 잡았습니다.
-1. 프론트에서 외부 이미지를 직접 로딩하지 않는다.
-2. 백엔드 서버가 외부 이미지 URL에 대신 요청을 보내 데이터를 가져온다.
-3. 해당 바이너리를 그대로 프론트에 전달한다.
-4.  프론트는 이를 **우리 서버에서 보낸 이미지**로 사용한다.
+N+1 문제의 원인은 연관 엔티티를 LAZY 로딩으로 하나씩 추가적으로 조회하는것 때문이라면 가장 먼저 떠올릴 수 있는 해결책은 fetchJoin을 사용하는 것입니다.
+####fetch join 이란?
+- fetch join은 연관된 엔티티를 join하면서 동시에 한번에 함께 로딩해 오는 기능입니다. 쉽게 말하면
+> 부모 데이터를 가져올 때 자식들도 한 번에 같이 가져와 줘
 
-이 방식에서는 브라우저가 보기에  이미지가 **외부가 아닌 우리 서버에서 온 것**으로 간주됩니다.
-결과적으로 캔버스가 오염되지 않고 이미지 다운로드가 정상적으로 작동합니다.
-
-#### 구현코드
+예를 들어 기존에 N+1 문제가 있던 코드가 아래와 같다고 가정하면
 ```java
-    @ResponseBody
-    @GetMapping("/convert/url/canvas")
-    fun convertUrlToCanvas(@RequestParam url: String): ResponseEntity<ByteArray> {
-        return try {
-            val decodedUrl = URL(URLDecoder.decode(url, StandardCharsets.UTF_8.toString()))
-            val connection = decodedUrl.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
+// N+1 문제가 발생하는 코드
+val votes = voteRepository.findByPostId(postId)    // 1번 쿼리
 
-            connection.inputStream.use { inputStream ->
-                if (connection.responseCode == 200) {
-                    ResponseEntity(IOUtils.toByteArray(inputStream), HttpStatus.OK)
-                } else {
-                    log.error("Response Code: ${connection.responseCode}")
-                    ResponseEntity("Invalid response".toByteArray(StandardCharsets.UTF_8), HttpStatus.BAD_REQUEST)
-                }
-            }
-        } catch (e: MalformedURLException) {
-            log.error("Malformed URL: $url", e)
-            ResponseEntity("Malformed URL".toByteArray(StandardCharsets.UTF_8), HttpStatus.BAD_REQUEST)
-        } catch (e: Exception) {
-            log.error("URL을 가져오는 동안 에러 발생: $url", e)
-            ResponseEntity("Internal Server Error".toByteArray(StandardCharsets.UTF_8), HttpStatus.INTERNAL_SERVER_ERROR)
-        }
-    }
+votes.forEach { vote ->
+    println(vote.voteOptions.content)                // Vote마다 추가 쿼리
+}
 ```
-- url 쿼리 파라미터로 외부 이미지 URL을 문자열로
-- 반환 타입은 실제 이미지 byte 배열을 그대로 반환
-- decodedUrl은 인코딩 한것을 디코딩 한 외부 이미지 URL
-- 그 후 서버 쪽에서 <strong>직접</strong> 외부 URL로 HTTP 연결 (브라우저가 요청하는게 아니라 우리 백엔드 서버가 요청)
-- 따라서 CORS는 <strong>브라우저 보안 정책</strong>이라 이 단계에서는 관여 X
-- 외부 서버가 200을 반환하면 그 응답 바디를 inputSteam으로 읽고 byte[]로 반환
-- 결국에는 브라우저가 이 바이트 데이터를 우리 서버가 보냇기 때문에 <strong>Same-Origin</strong> 리소스로 판단
+- tb_vote 한번 조회
+- 각 Vote 마다 voteOptions 를 LAZY로 가져오면서 tb_vote_option 쿼리 N번 실행
 
-***
-<br>
-<br>
+이를 해결하기 위해 QueryDSL을 사용하여 아래와 같이 fetch join을 적용할 수 있습니다.
+```java
+val v = QVote.vote
+val vo = QVoteOption.voteOption
 
-# 마무리하며
-html2canvas는 편리한 라이브러리지만 브라우저의 CORS 정책과 맞물리면 예상치 못한 제약이 생길 수 있다는걸 알게되었습니다.
+val votes = queryFactory
+    .selectFrom(v)
+    .leftJoin(v.voteOptions, vo).fetchJoin()
+    .where(v.postId.eq(postId))
+    .fetch()
+```
 
-그리고 이미지 다운로드할때뿐만 아니라 이미지를 표시하거나 렌더링하는 과정에서도 CORS 문제가 빈번하게 발생하여 난감한 경우가 많았는데 브라우저의 출처 정책을 이해하고 나니 문제를 구조적으로 바라볼 수 있었습니다.
+fetch join 은 JPA에게 이렇게 말합니다.
+> 지금 join한 voteOptions를 LAZY 말고, 즉시 로딩(EAGER)해서 한번에 다 가져와
 
-이번 문제는 CDN 리소스는 서버 헤더 수정으로 해결 가능했지만 외부 사이트 리소스는 해당 서버의 정책을 바꿀 수 없기 때문에 백엔드 프록시를 통해 동일 출처로 변환하는 방식으로 해결했습니다.
+즉 로딩 전략을 바꿔버리는 역할을 하기 때문에 이걸 사용하면 JPA는
+- Vote를 조회할 때 voteOptions 까지 프록시 없이 채워 넣는다
+- 따라서 이후 vote.voteOptions 를 접근 시 추가 쿼리가 절대 발생하지 않는다
 
-결과적으로 외부 이미지가 포함된 페이지라도 문제없이 DOM 전체를 이미지로 변환할 수 있게 되었고 악명높은 CORS 에러를 해결할 수 있어서 뿌듯했습니다.
 
-![
-다운로드 성공
-](./img/cors/download1.png)
+## 하지만 fech join에도 한계가 있다.
 
-![
-다운로드 결과
-](./img/cors/download2.png)
+이렇게만 보면 fetch join이 만능인것처럼 느껴질 수도 있지만 실제로 적용해보면 다음과 같은 한계를 만날 수 있습니다.
+1. **여러 컬렉션을 동시에 fetch join 할 수 없다**
+예를 들어 Vote 엔티티에
+- voteOptions(옵션)
+- responses(응답)
+- log(로그)
+이와 같이 컬렉션이 여러 개 있다면
+```java
+select v from Vote v
+join fetch v.voteOptions
+join fetch v.responses
+join fetch v.logs
+```
+이런식으로 여러 컬렉션을 한 번에 fetch join 하는 것은 제한이 있습니다. 따라서 한번에 하나의 컬렉션만 fetch join을 해온다거나 나머지는 따로 조회하고 매핑을 해야하는 불편함을 감수해야합니다.
+
+2. 페이징에 한계가 있다.
+fetch join을 적용한 상태에서 Pageable 같은 페이징을 적용하면
+- DB입장에서는 row기준으로 페이징
+- JPA입장에서는 객체(Vote)기준으로 엔티티 만들어서 페이징
+따라서 Hibernate가 경고 또는 예외를 던지거나 메모리에서 강제로 중복 제거하면서 페이징을 할 수 있기 때문에 페이징은 가급적 피하는게 좋습니다.
