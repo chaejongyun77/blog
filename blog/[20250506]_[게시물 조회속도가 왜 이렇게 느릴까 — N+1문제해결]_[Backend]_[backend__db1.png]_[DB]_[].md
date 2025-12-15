@@ -278,3 +278,90 @@ JPA는 Post기준으로 묶으니까
 5) 결론적으로는 문제 발생
 우리는 페이징을 게시글 수를 기준으로 하고 싶은데 DB는 row수를 기준으로 페이징을 해버려서 일치하지 않음
 따라서 fetch join을 쓰면 게시글 1개가 여러줄로 반환되기 때문에 DB가 row 기준으로 페이징을 하게되면 JPA가 게시글 기준으로 엔티티를 만들 수 없어서 정확한 페이징이 불가능해지는 현상이 나타나게 됩니다.
+
+## DTO Projection 기반 조회로 N+1 문제 해결
+> 쿼리 결과를 DTO로 바로 매핑
+
+만약 비지니스 요구사항이 아래와 같다고 가정해보자.
+
+### 비즈니스 요구사항
+- 게시물 10개를 화면에 보여줘야한다.
+- 각 게시물에는 이미지가 첨부되어있을 수도 있고 없을 수도 있다.
+
+#### 해결 방법: DTO Projection + 일괄 조회
+1. 게시물 리스트 조회
+```java
+val posts: List<PostDTO> =
+    queryFactory
+        .select(
+            Projections.constructor(
+                PostDTO::class.java,
+                post.id,
+                post.title
+            )
+        )
+        .from(post)
+        .where(post.deleteYn.eq("N"))
+        .fetch()
+
+val postIds = posts.map { it.id }
+```
+
+- 게시물을 조회할 때 엔티티전체가 아니라 랜더링에 필요한 필드만 DTO로 조회
+- 즉 게시물의 기본 정보와 ID목록만 추출
+
+2. 이미지(게시물 연관데이터)는 추출한 ID목록으로 한번에 조회
+```java
+// 게시물에 연결된 이미지 일괄 조회
+val images: List<ImageDTO> =
+    queryFactory
+        .select(
+            Projections.constructor(
+                ImageDTO::class.java,
+                image.postId,
+                image.url
+            )
+        )
+        .from(image)
+        .where(image.postId.`in`(postIds))
+        .fetch()
+
+val imageMap = images.associateBy { it.postId }
+```
+- 쿼리 1번으로 이미지데이터 조회
+
+3. 이미지데이터를 게시물아이디에 맞게 매핑
+```java
+posts.forEach { post ->
+    post.image = imageMap[post.id]
+}
+```
+이렇게 함으로써 게시물 리스트는 DTO Projection을 통해 한번에 조회하고 이미지는 추출한 ID를 기준으로 일괄 조회한 후 매핑하는 방식을 사용하여 
+N+1문제를 해결하였습니다.
+
+## 하지만 DTO Projection 방식에도 한계는 있다.
+1. 영속성 컨테스트를 사용할 수 없다.
+DTO Projection으로 조회한 객체는 엔티티가 아니므로 이 객체는 영속성 컨테스트에 올라가지 않는다는 한계가 있습니다.
+
+2. LAZY / EAGER과 같은 ORM 기능을 사용할 수 없다.
+ - @ManyToOne(fetch = Lazy)
+ - @OneToMany(fetch = Eager)
+과 같은 설정이 아무런 의미가 없어질 수 있습니다. ORM의 편의적인 기능을 사용하지 못해서 사용자의 제어가 필요하다는 단점이 있습니다.
+
+3. 코드량이 늘어나거나 재사용성이 떨어질 수 있다.
+아무래도 여러번의 조회 쿼리를 작성해야하고 수동으로 매핑을 해줘야하는 코드가 필요하기 때문에 fetch join으로 한번에 끝내는 방식과 비교해서  
+코드가 길어지기도 하고 다른 개발자가 처음 이 코드를 봤을때도 복잡해보일 수 있다는 단점이 있다.
+
+# 마무리하며
+N+1 문제에는 해결법이 정해져 있는것은 아니고 프로젝트의 구조와 목적에 따라 적절한 해결 방법을 선택하는 것이 중요하다고 생각합니다.  
+
+저같은 경우에는 게시물 조회 시 연관 데이터가 많고 조회와 관련된 API이기 때문에 fetch join을 사용하는 방식보다는
+DTO Projection 기반으로 필요한 데이터를 명시적으로 조회하는 방식이 더 적합하다고 판단했습니다.
+
+그 결과 기존에 약 6초 이상 소요되던 게시물 조회 쿼리가 DTO Projection 방식으로 개선한 이후 약 0.8초 수준까지 단축되는 효과를 확인할 수 있었다.
+
+결론적으로 N+1 문제를 해결할 때는 무조건 fetch join을 사용한다거나 무조건 DTO Projection이 정답이다라고 접근하기보다는,
+
+조회인지 수정인지, 페이징이 필요한지, 데이터의 구조가 어떤지 등을 종합적으로 고려해 각자의 상황에 맞는 최적의 방식을 선택하는 것이 중요하다고 생각합니다.
+
+이번 경험을 통해 ORM을 무조건 편의 기능으로만 사용하기보다는 필요에 따라 적절히 제어하며 사용하는 것이 실무에서 더 안정적인 시스템을 만드는 데 도움이 된다는 점을 다시 한 번 느낄 수 있었다.
