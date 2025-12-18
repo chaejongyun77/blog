@@ -219,7 +219,7 @@ val postB = Post(id = 1, title = "공지사항", comments = [...])
 
 <br>
 
-### fetchJoin 사용  
+## fetchJoin을 사용하여 문제 해결
 
 N+1 문제의 원인은 연관 엔티티를 지연로딩으로 하나씩 추가적으로 조회하는것 때문이라면 가장 먼저 떠올릴 수 있는 해결책은 fetch join을 사용하는 것입니다.
 #### fetch join 이란?
