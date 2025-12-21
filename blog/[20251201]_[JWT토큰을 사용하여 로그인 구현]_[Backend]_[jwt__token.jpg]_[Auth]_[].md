@@ -24,3 +24,18 @@ Access Token을 통해 사용자를 식별하되,
 <br>
 
 # JWT토큰이란 무엇인가?
+
+**JWT(Json Web Token)**은 Json 객체에 인증에 필요한 정보들을 담은 후 **비밀키로 서명한 토큰**으로 인터넷 표준 인증 방식이다. 
+
+## JWT토큰 프로세스
+
+![
+다운로드 성공
+](./img/jwt/token3.png)
+
+- 사용자가 아이디와 비밀번호를 입력하여 서버에 로그인 요청
+- 서버는 비밀키를 사용해 JSON payload에 서명(Signature)을 추가한 JWT 토큰을 생성
+- Response body로 JWT토큰 전달
+- 이후 API요청시 헤더에 JWT 토큰을 포함
+- 서버에서 JWT검증 후 API 요청 처리
+
