@@ -31,7 +31,7 @@ Access Token을 통해 사용자를 식별하되,
 ## JWT토큰 프로세스
 
 ![
-다운로드 성공
+토큰
 ](./img/jwt/token3.png)
 
 - 사용자가 아이디와 비밀번호를 입력하여 서버에 로그인 요청
@@ -69,9 +69,60 @@ Access Token 값을 쿠키에 Base64형태로 저장하다보니 누구나 개�
 물론 값을 한 눈에 알아보기 쉬운 형태는 아니었지만 마음먹고 토큰을 탈취하려고 하는 사람들에겐 디코딩하기 쉬운 값들이므로 보안에 취약점이 있었습니다.
 
 <br>
+***
 
 ## 그래서 어떻게 보안에 신경을 썻는가?
 <br>
+
+### RefreshToken을 사용한 인증 구조 개선
+
+Access Token의 한계를 인지한 후 가장 먼저 적용한 개선 방법은 Refresh Token을 도입하는 것이었다.
+
+#### Refresh Token이란?
+Refresh Token은 Access Token이 만료되었을 때 새로운 Access Token을 재발급받기 위해 사용하는 토큰이다.
+
+- Access Token 보다 긴 유효시간
+- 인증 요청에는 사용되지 않음
+- 오직 토큰 재발급 용도로만 사용
+
+> Access Token이 **출입증**이라면 ReFresh Token은 출입증을 다시 받기위한 **신분증**
+
+### 초기의 Refresh Token 도입 방식
+처음에는 서버 상태에 대해 stateless 구조를 유지하고자 다음과 같은 방식으로 Refresh Token을 적용했습니다.
+
+#### 초기 설계   
+- Access Token 유효시간 15분
+- Refresh Token 유효시간 4시간
+- 두 토큰 다 클라이언트에 전달 후 쿠키에 저장
+
+### 동작 방식    
+1. Access Token 기간 만료
+2. 클라이언트가 Refresh Token을 서버로 전달
+3. 서버는 Refresh Token의 서명, 만료시간등을 검증
+4. 검증 성공 시 새로운 Access Token 발급   
+
+위와 같은 방식은 구현이 단순하고 서버에 별다른 저장소가 필요 없다는 장점이 있다.
+
+### 그런데 여전히 남아있는 문제점
+> 그러면 Refresh Token을 탈취당하면 어떻게 되는건데? 
+> 결국 Access Token만을 사용할때랑 똑같이 위험한거 아니야?
+
+jwt토큰의 stateless 장점을 살릴려고 서버에서 관리를 안하려는거에 중점을 둿다가 결국 보안적 한계를 마주하게 되었습니다.
+
+1. Refresh Token 탈취 시 재발급 무제한 허용
+- 쿠키에 저장한 Refresh Token을 탈취당하면 결국 만료시간 까지 계속 Access Token 재발급이 가능해짐
+
+2. 동시 로그인 및 제어 불가
+- 동일 계정으로 다중 로그인을 했을 때 통제가 불가능함
+
+3. 강제 로그아웃을 시킬 수 없음
+- 서버가 Refresh Token을 기억하고 있지 않다보니간 특정 사용자를 로그아웃 시킬 수 있는 수단이 없음
+
+결국에는 Refresh Token을 도입했지만 토큰을 통제하지 못하다보니 제약이 걸리는게 많았고 보안에 취약한 점도 많았습니다.
+
+### Redis에 Refresh Token을 저장하는 인증 구조로 변경
+> 완전한 stateless 구조를 포기하다   
+
 
 
 
