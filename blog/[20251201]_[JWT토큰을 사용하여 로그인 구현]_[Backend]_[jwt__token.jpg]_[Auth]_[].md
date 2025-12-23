@@ -69,9 +69,10 @@ Access Token 값을 쿠키에 Base64형태로 저장하다보니 누구나 개�
 물론 값을 한 눈에 알아보기 쉬운 형태는 아니었지만 마음먹고 토큰을 탈취하려고 하는 사람들에겐 디코딩하기 쉬운 값들이므로 보안에 취약점이 있었습니다.
 
 <br>
+
 ***
 
-## 그래서 어떻게 보안에 신경을 썻는가?
+## 그래서 보안에 어떻게 신경을 썻는가?
 <br>
 
 ### RefreshToken을 사용한 인증 구조 개선
@@ -107,7 +108,7 @@ Refresh Token은 Access Token이 만료되었을 때 새로운 Access Token을 �
 > 그러면 Refresh Token을 탈취당하면 어떻게 되는건데? 
 > 결국 Access Token만을 사용할때랑 똑같이 위험한거 아니야?
 
-jwt토큰의 stateless 장점을 살릴려고 서버에서 관리를 안하려는거에 중점을 둿다가 결국 보안적 한계를 마주하게 되었습니다.
+JWT 토큰의 stateless 장점을 살릴려고 서버에서 관리를 안하려는거에 중점을 둿다가 결국 보안적 한계를 마주하게 되었습니다.
 
 1. Refresh Token 탈취 시 재발급 무제한 허용
 - 쿠키에 저장한 Refresh Token을 탈취당하면 결국 만료시간 까지 계속 Access Token 재발급이 가능해짐
@@ -118,11 +119,130 @@ jwt토큰의 stateless 장점을 살릴려고 서버에서 관리를 안하려�
 3. 강제 로그아웃을 시킬 수 없음
 - 서버가 Refresh Token을 기억하고 있지 않다보니간 특정 사용자를 로그아웃 시킬 수 있는 수단이 없음
 
+4. 헤더 용량 증가
+- 쿠키에 AccessToken과 RefreshToken 값을 저장하다보니 API전송할 때 헤더에 포함되는 쿠키 용량이 증가함
+
 결국에는 Refresh Token을 도입했지만 토큰을 통제하지 못하다보니 제약이 걸리는게 많았고 보안에 취약한 점도 많았습니다.
 
 ### Redis에 Refresh Token을 저장하는 인증 구조로 변경
 > 완전한 stateless 구조를 포기하다   
 
+#### Redis + RefreshToken을 활용한 프로세스
+<br>
 
+![
+refreshToken
+](./img/jwt/token5.png)
+
+- 로그인 요청 
+- 로그인완료되면 서버에서 RefreshToken UUID를 키로 하고 refresh Token 값을 저장함과 동시에 Access Token과 Refresh Token UUID를 클라이언트에서 전달
+- 클라이언트에서 Access Token은 Local Storage ,RefreshToken UUID는 쿠키에 저장 
+- 클라이언트에서 서버로 api 호출 시 Access Token을 헤더에 담아서 전송 
+- 백앤드는 Access Token 검증, Access Token이 만료되었으면 401에러 
+- 만약 클라이언트가 401에러를 받으면 RefreshToken UUID로 서버에 토큰 갱신 요청 
+- Redis에 저장된 Refresh Token 유효성 검증 및 토큰 페어링 검증 
+- 검증 통과하면 서버에서 Access Token 재발급
+
+1. Redis에 RefreshToken 저장   
+
+![
+refreshToken
+](./img/jwt/token8.png)
+
+- RefreshToken UUID를 key
+- Refresh Token 값을 value로 저장   
+
+<br> 
+
+2. Local Storage에 Access Token 저장
+
+![
+refreshToken
+](./img/jwt/token6.png)
+
+3. 쿠키에 RefreshToken UUID 저장
+
+![
+refreshToken
+](./img/jwt/token6.png)
+
+4. Refresh Token 갱신 로직
+
+#### 토큰 페어 검증을 위해 Claims 추출 
+
+```java 
+ val accessClaims = try {
+            JwtUtil.getClaims(token)
+        } catch (e: ExpiredJwtException) {
+            
+            e.claims
+        } ?: throw ForbiddenException("INVALID_ACCESS_TOKEN")
+
+```
+- 토큰 페어 검증을 위해 AccessToken안에 들어있는 userId 추출
+
+#### refreshTokenUUID에 해당하는 Refresh Token 유효성 검증
+
+```java
+   val savedRefreshToken = getRefreshToken(refreshTokenUUID, role)
+            ?: throw ForbiddenException("REFRESH_TOKEN_NOT_FOUND")
+
+        
+        val refreshClaims = try {
+            JwtUtil.isValidJwt(savedRefreshToken) 
+            JwtUtil.getClaims(savedRefreshToken)  
+        } catch (e: ExpiredJwtException) {
+            throw ForbiddenException("REFRESH_TOKEN_EXPIRED")
+        }
+```
+- Refresh Token이 만료되었는지, 변조되었는지 유효성을 판단
+
+#### 토큰 페어 검증 
+
+```java
+        val refreshId: Long = when (role) {
+            Role.TEACHER -> {
+                refreshClaims["id"]?.toString()?.toLongOrNull()
+                    ?: throw ForbiddenException("id not found for TEACHER in refresh token")
+            }
+
+            Role.STUDENT -> {
+                refreshClaims["studentId"]?.toString()?.toLongOrNull()
+                    ?: throw ForbiddenException("studentId not found for STUDENT in refresh token")
+            }
+
+            else -> throw ForbiddenException("UNKNOWN_ROLE")
+        }
+        if (refreshId != accessId) {
+            throw ForbiddenException("REFRESH_TOKEN_MISMATCH")
+        }
+        
+```
+
+- Access Token 안에 들어있는 userId와 Refresh Token안에 들어있는 userId가 같은지 체크
+- Refresh Token이 지금 만료된 Access Token의 주인이 맞는지 확인
+
+
+#### Access Token 재발급
+
+```java
+val newAccessToken = when (role) {
+        Role.TEACHER -> {
+            val teacher = userMapper.selectUser(refreshId)
+            JwtUtil.buildAccessJwt(TeacherResponse(teacher))
+        }
+
+        Role.STUDENT -> {
+            val student: Student = studentRepository.findById(refreshId).orElseThrow()
+            JwtUtil.buildAccessJwt(StudentResponse(student))
+        }
+
+        else -> throw ForbiddenException("UNKNOWN_ROLE")
+    }
+
+    return Token().apply {
+        accessToken = newAccessToken
+    }
+```
 
 
