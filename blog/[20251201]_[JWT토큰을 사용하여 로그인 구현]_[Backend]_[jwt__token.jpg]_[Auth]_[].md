@@ -201,13 +201,13 @@ refreshToken
 
 ```java
         val refreshId: Long = when (role) {
-            Role.TEACHER -> {
-                refreshClaims["id"]?.toString()?.toLongOrNull()
+            Role.선생님 -> {
+                refreshClaims["아이디"]?.toString()?.toLongOrNull()
                     ?: throw ForbiddenException("id not found for TEACHER in refresh token")
             }
 
-            Role.STUDENT -> {
-                refreshClaims["studentId"]?.toString()?.toLongOrNull()
+            Role.학생 -> {
+                refreshClaims["학생아이디"]?.toString()?.toLongOrNull()
                     ?: throw ForbiddenException("studentId not found for STUDENT in refresh token")
             }
 
@@ -227,12 +227,12 @@ refreshToken
 
 ```java
 val newAccessToken = when (role) {
-        Role.TEACHER -> {
+        Role.선생님 -> {
             val teacher = userMapper.selectUser(refreshId)
             JwtUtil.buildAccessJwt(TeacherResponse(teacher))
         }
 
-        Role.STUDENT -> {
+        Role.학생 -> {
             val student: Student = studentRepository.findById(refreshId).orElseThrow()
             JwtUtil.buildAccessJwt(StudentResponse(student))
         }
@@ -245,4 +245,12 @@ val newAccessToken = when (role) {
     }
 ```
 
+## 여전히 문제점이 있다면?
+
+1. Local Storage는 안전한가? Access Token의 유효시간이 아무리 짧더라도 해킹당하게 되면 그 시간동안은 보안이 위험한거 아닌가..?
+2. Redis가 먹통이 되면 로그인이 안되는거 아니야?
+3. AccessToken만 재발급할 뿐만 아니라 refreshToken도 재발급해서 redis에 저장이 필요
+
+
+## 마무리하여
 
