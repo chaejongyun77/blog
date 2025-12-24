@@ -1,5 +1,5 @@
 # 진행 배경
-> "JWT토큰을 활용하여 보안성을 높여보자"
+> "로그인 보안성을 높여보자! "
 
 기존 시스템에서는 **세션 + JWT Access Token** 조합을 사용해 로그인 상태를 유지하고 있었다.
 
@@ -187,7 +187,7 @@ AccessToken
 
 ![
 refreshToken
-](./img/jwt/token6.png)
+](./img/jwt/token7.png)
 
 #### 4. Refresh Token 갱신 로직 ####
 
