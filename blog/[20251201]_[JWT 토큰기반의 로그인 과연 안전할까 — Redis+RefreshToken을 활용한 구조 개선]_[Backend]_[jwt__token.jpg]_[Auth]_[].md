@@ -45,7 +45,8 @@ Access Token을 통해 사용자를 식별하며 세션을 함께 사용하면�
 
 보안을 위해 유효시간을 무제한으로 두지 않고 4시간으로 설정해두었지만 만약에 토큰이 탈취당할 경우 해당 유효시간 동안은 **누구든 API를 접근할 수 있다는 문제점**이 있었습니다.  
 
-또한 탈취를 당하더라도 서버쪽에서 토큰관련 정보를 저장해두지 않았기 때문에 강제로 로그아웃도 시킬 수 없는 상황이여서 보안에 취약했습니다.      
+또한 탈취를 당하더라도 서버쪽에서 토큰관련 정보를 저장해두지 않았기 때문에 강제로 로그아웃도 시킬 수 없는 상황이여서 보안에 취약했습니다.   
+
 즉 Access Token 하나로 로그인 상태를 유지하는 구조는 보안적인 사고가 발생했을 시 대응할 수 있는 수단이 거의 없었습니다.
 
 <br>
@@ -62,7 +63,7 @@ JWT는 Response body를 통해 서버에서 클라이언트로 전달되며 이�
    
 따라서 만약 토큰이 유출될 경우 개인정보가 노출이 되고 내부 시스템의 구조를 유추할 수 있는 수단이 될 수도 있습니다.   
 
-또한 이렇게 불필요한 사용자 정보를 Access Token에 저장하면 JWT 토큰의 크기가 증가하고 API 요청 시 쿠키가 자동으로 헤더에 포함되어 전송될때 크기 증가로 이한 트래픽 및 성능에 영향을 끼칠 수도 있을 거 같다는 생각을 했습니다.
+또한 이렇게 불필요한 사용자 정보를 Access Token에 저장하면 JWT 토큰의 크기가 증가하고 API 요청 시 쿠키가 자동으로 헤더에 포함되어 전송될때 크기 증가로 이한 **트래픽 및 성능에 영향**을 끼칠 수도 있을 거 같다는 생각을 했습니다.
 
 <br>
 
@@ -88,7 +89,7 @@ Access Token의 한계를 인지한 후 가장 먼저 적용한 개선 방법은
 <br>
 
 #### Refresh Token이란?
-Refresh Token은 Access Token이 만료되었을 때 새로운 Access Token을 재발급받기 위해 사용하는 토큰이다.
+Refresh Token은 Access Token이 만료되었을 때 새로운 **Access Token을 재발급받기 위해 사용하는 토큰**이다.
 
 - Access Token 보다 긴 유효시간
 - 인증 요청에는 사용되지 않음
@@ -98,9 +99,9 @@ Refresh Token은 Access Token이 만료되었을 때 새로운 Access Token을 �
 
 <br>
 
-### 초기의 Refresh Token 도입 방식
+### Refresh Token 도입 방식
 처음에는 서버 상태에 대해 stateless 구조를 유지하고자 다음과 같은 방식으로 Refresh Token을 적용했습니다.
-
+ 
 #### 초기 설계   
 - Access Token 유효시간 15분
 - Refresh Token 유효시간 4시간
@@ -119,7 +120,7 @@ Refresh Token은 Access Token이 만료되었을 때 새로운 Access Token을 �
 <br>
 
 ### 그런데 여전히 남아있는 문제점
-> 그러면 Refresh Token을 탈취당하면 어떻게 되는건데?    
+> <span style="color:red"> 그러면 Refresh Token을 탈취당하면 어떻게 되는건데?    
 > 결국 Access Token만을 사용할때랑 똑같이 위험한거 아니야?
 
 JWT 토큰의 stateless 장점을 살릴려고 서버에서 관리를 안하려는거에 중점을 둿다가 결국 보안적 한계를 마주하게 되었습니다.
@@ -156,13 +157,13 @@ refreshToken
 ](./img/jwt/token5.png)
 
 - 로그인 요청 
-- 로그인완료되면 서버에서 RefreshToken UUID를 키로 하고 refresh Token 값을 저장함과 동시에 Access Token과 Refresh Token UUID를 클라이언트에서 전달
-- 클라이언트에서 Access Token은 Local Storage ,RefreshToken UUID는 쿠키에 저장 
+- 로그인완료되면 서버에서 **RefreshToken UUID를 키**로 하고 refresh Token 값을 저장함과 동시에 Access Token과 Refresh Token UUID를 클라이언트에서 전달
+- 클라이언트에서 Access Token은 **Local Storage** ,RefreshToken UUID는 **쿠키**에 저장 
 - 클라이언트에서 서버로 api 호출 시 Access Token을 헤더에 담아서 전송 
 - 백앤드는 Access Token 검증, Access Token이 만료되었으면 401에러 
-- 만약 클라이언트가 401에러를 받으면 RefreshToken UUID로 서버에 토큰 갱신 요청 
-- Redis에 저장된 Refresh Token 유효성 검증 및 토큰 페어링 검증 
-- 검증 통과하면 서버에서 Access Token 재발급
+- 만약 클라이언트가 401에러를 받으면 RefreshToken UUID로 서버에 **토큰 갱신** 요청 
+- Redis에 저장된 Refresh Token **유효성 검증 및 토큰 페어링 검증** 
+- 검증 통과하면 서버에서 **Access Token 재발급**
 
 <br>
 
@@ -189,7 +190,7 @@ AccessToken
 refreshToken
 ](./img/jwt/token7.png)
 
-#### 4. Refresh Token 갱신 로직 ####
+#### 4. Refresh Token 갱신 ####
 
 <br>
 
@@ -276,22 +277,26 @@ val newAccessToken = when (role) {
 ```
 
 <br>
+
 ***
 <br>
 
 ## 여전히 문제점이 있다면?
 
 Refresh Token과 Redis를 도입하면서 Access Token 단독 사용 구조의 한계는 상당 부분 개선되었다.   
+
 하지만 JWT토큰을 활용한 로그인 구조를 설계하면서 느낀점은 여전히 아래와같은 문제점이 생길 수 있다는 생각을 하게 되었다.
 
 
 #### 1. Local Storage는 안전한가? ####
-> Access Token의 유효시간이 아무리 짧더라도 해킹당하게 되면 그 시간동안은 보안이 위험한거 아닌가..?    
+> <span style="color:red"> Access Token의 유효시간이 아무리 짧더라도 해킹당하게 되면 그 시간동안은 보안이 위험한거 아닌가..?    
 
 현재 구조에서는 아래와 같이 저장하고 있다.
 
 - Access Token → Local Storage
 - Refresh Token UUID → Cookie
+
+<br>
 
 Access Token의 유효시간을 짧게 설정했기 때문에 탈취되더라도 공격 가능 시간은 제한된다.
 하지만 근본적인 질문은 여전히 남는다.
@@ -302,6 +307,8 @@ Local Storage는 다음과 같은 특성을 가진다.
 - JavaScript로 언제든지 접근 가능
 - XSS 공격에 취약
 - HttpOnly 옵션 적용 불가
+
+<br>
 
 즉, Access Token의 유효시간이 아무리 짧더라도 XSS가 발생하면 그 시간 동안은 토큰 탈취가 가능하다.
 
@@ -323,7 +330,9 @@ Refresh Token을 Redis에 저장함으로써 토큰을 서버에서 통제할 �
 
 #### 3. Refresh Token도 재발급해야 하지 않을까? ####
 
-> RefreshToken UUID가 유출되었다면?
+> RefreshToken UUID가 유출되었다면?   
+
+
 만약 그렇다면 Redis에 저장된 Refresh Token이 유효한 동안 Access Token 재발급이 계속 가능할 것이며   
 Refresh Token또한 한번 발급해서 끝내는게 아니라 Access Token을 재발급 해줄때 Refresh Token도 함께 재발급 해서 주기적으로 교체 해주는 것이 안전할 것 같다고 생각했다.
 
