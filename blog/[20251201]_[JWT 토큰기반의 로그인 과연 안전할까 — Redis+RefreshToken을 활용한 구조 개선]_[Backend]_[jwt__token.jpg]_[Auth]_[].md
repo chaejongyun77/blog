@@ -194,7 +194,7 @@ refreshToken
 
 <br>
 
-#### 토큰 페어 검증을 위해 Claims 추출 
+#### 1) 토큰 페어 검증을 위해 Claims 추출 
 
 ```java 
  val accessClaims = try {
@@ -209,7 +209,7 @@ refreshToken
 
 <br>
 
-#### refreshTokenUUID에 해당하는 Refresh Token 유효성 검증
+#### 2) refreshTokenUUID에 해당하는 Refresh Token 유효성 검증
 
 ```java
    val savedRefreshToken = getRefreshToken(refreshTokenUUID, role)
@@ -227,7 +227,7 @@ refreshToken
 
 <br>
 
-#### 토큰 페어 검증 
+#### 3) 토큰 페어 검증 
 
 ```java
         val refreshId: Long = when (role) {
@@ -254,7 +254,7 @@ refreshToken
 
 <br>
 
-#### Access Token 재발급
+#### 4) Access Token 재발급
 
 ```java
 val newAccessToken = when (role) {
