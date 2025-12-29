@@ -101,3 +101,4 @@ class Solution {
     }
 }
 ```
+이분탐색
