@@ -40,7 +40,7 @@ kafka
 
 ![
 websocket
-](./img/kafka/websocket.jpeg)
+](./img/kafka/websocket.gif)
 
 웹 소켓은 HTML5에 등장 실시간 웹 애플리케이션을 위해 설계된 통신 프로토콜이며, TCP(Transmission Control Protocol)를 기반으로 합니다.  
 
