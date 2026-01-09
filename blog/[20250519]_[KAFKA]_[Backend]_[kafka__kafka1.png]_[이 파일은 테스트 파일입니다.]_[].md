@@ -191,20 +191,25 @@ kafka
 ](./img/kafka/kafka6.png)
 
 
-구성 요소
+1. 구성 요소   
+
 Event: kafka에서 producer 와 consumer가 데이터를 주고받는 단위. 메세지
 Producer: kafka에 이벤트를 게시(post, pop)하는 클라이언트 어플리케이션
 Consumer: Topic을 구독하고 이로부터 얻어낸 이벤트를 받아(Sub) 처리하는 클라이언트 어플리케이션
 Topic: 이벤트가 모이는 곳. producer는 topic에 이벤트를 게시하고, consumer는 - topic을 구독해 이로부터 이벤트를 가져와 처리. 게시판 같은 개념
 Partition: Topic은 여러 Broker에 분산되어 저장되며, 이렇게 분산된 topic을 partition이라고 함
 Zoopeeper: 분산 메세지의 큐의 정보를 관리
-동작 원리
+
+<br>
+
+2. 동작 원리
 publisher는 전달하고자 하는 메세지를 topic을 통해 카테고리화 한다.
 subscriber는 원하는 topic을 구독(=subscribe)함으로써 메시지를 읽어온다.
 publisher와 subscriber는 오로지 topic 정보만 알 뿐, 서로에 대해 알지 못한다.
 kafka는 broker들이 하나의 클러스터로 구성되어 동작하도록 설계
 클러스터 내, broker에 대한 분산처리는 ZooKeeper가 담당한다.
-장점
+
+3. 장점
 대규모 트래픽 처리 및 분산 처리에 효과적
 클러스터 구성, Fail-over, Replication 같은 기능이 있음
 100Kb/sec 정도의 속도 (다른 메세지 큐 보다 빠름)
