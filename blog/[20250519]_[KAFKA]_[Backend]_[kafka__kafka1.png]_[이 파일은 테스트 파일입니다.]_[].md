@@ -139,7 +139,6 @@ kafka
 ![
 kafka
 ](./img/kafka/kafka3.png)
-
 - producer: 정보를 제공하는 자
 - consumer: 정보를 제공받아서 사용하려는 자
 - Queue: producer의 데이터를 임시 저장 및 consumer에 제공하는 곳
