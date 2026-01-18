@@ -1,52 +1,29 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-
 <style>
-  .hero-swiper {
-    width: 100%;
+  .snap-carousel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    padding: 8px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snap-carousel::-webkit-scrollbar { display: none; }
+
+  .snap-carousel .slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
     border-radius: 12px;
     overflow: hidden;
-    position: relative; /* 중요 */
+    position: relative;
   }
-  .hero-swiper .swiper-slide img {
+  .snap-carousel img {
     width: 100%;
     height: auto;
     display: block;
   }
-
-  /* 버튼이 클릭되게 위로 올리기 */
-  .hero-swiper .hero-prev,
-  .hero-swiper .hero-next {
-    z-index: 10;
-  }
 </style>
 
-<div class="swiper hero-swiper">
-  <div class="swiper-wrapper">
-    <div class="swiper-slide">
-      <img src="./img/jwt/token5.png" alt="slide1" />
-    </div>
-    <div class="swiper-slide">
-      <img src="./img/jwt/token3.png" alt="slide2" />
-    </div>
-  </div>
-
-  <!-- 고유 클래스 -->
-  <div class="swiper-button-prev hero-prev"></div>
-  <div class="swiper-button-next hero-next"></div>
-  <div class="swiper-pagination hero-pagination"></div>
+<div class="snap-carousel">
+  <div class="slide"><img src="/img/jwt/token5.png" alt="slide1"></div>
+  <div class="slide"><img src="/img/jwt/token3.png" alt="slide2"></div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script>
-  const el = document.querySelector(".hero-swiper");
-
-  new Swiper(el, {
-    loop: true,
-    autoplay: { delay: 3500, disableOnInteraction: false },
-    pagination: { el: el.querySelector(".hero-pagination"), clickable: true },
-    navigation: {
-      nextEl: el.querySelector(".hero-next"),
-      prevEl: el.querySelector(".hero-prev"),
-    },
-  });
-</script>
