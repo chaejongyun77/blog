@@ -24,6 +24,6 @@
 </style>
 
 <div class="snap-carousel">
-  <div class="slide"><img src="/img/jwt/token5.png" alt="slide1"></div>
-  <div class="slide"><img src="/img/jwt/token3.png" alt="slide2"></div>
+  <div class="slide"><img src="./img/jwt/token5.png" alt="slide1"></div>
+  <div class="slide"><img src="./img/jwt/token3.png" alt="slide2"></div>
 </div>
