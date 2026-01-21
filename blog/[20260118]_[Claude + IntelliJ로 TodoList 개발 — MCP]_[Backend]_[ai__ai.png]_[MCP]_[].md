@@ -13,6 +13,9 @@
 
 이 조합으로 간단한 ToDoList 페이지를 구현하면서 Claude Code를 실제 개발 흐름 속에서 사용해보고 MCP가 어떤 역할을 하는지도 함께 살펴보겠습니다.
 
+***
+<br>
+
 # MCP 개념 설명
 
 ## LLM & Agent
@@ -92,6 +95,9 @@ Claude LLM은 전달받은 실제 코드 내용을 기반으로 문제점을 판
 #### STEP7. IntelliJ가 실제 파일 수정
 MCP Server는 이 요청을 받아 IntelliJ를 통해 실제 프로젝트 파일을 수정합니다.
 
+***
+<br>
+
 # IntelliJ + Claude Code 연동 과정
 
 ## IntelliJ MCP Server 플러그인 설치
@@ -121,12 +127,16 @@ claude
 
 ## 연동 확인
 
-
 ![
 claude
-](./img/mcp/mcp1.png)
+](./img/mcp/mcp5.png)
 
-# 실제로 ToDoList를 어떻게 만들었는지 흐름 정리
+위와 같이 IntelliJ와 Claude Code를 연동시켜 현재 작업하고 있는 파일구조를 알 수 있습니다.
+
+***
+<br>
+
+# ToDoList를 어떻게 만들었는지 흐름 정리
 
 ## 1. 투두 리스트 CRUD 서버 개발 (Spring Boot + JPA + H2)
 ```
@@ -145,6 +155,9 @@ Spring Boot 3.x, Spring Web, Spring Data JPA, H2DB
 6. 테스트 코드는 나중에 따로 요청할게.
 ```
 
+Entity–DTO–Service–Controller 계층을 분리해 REST API의 흐름을 정리하고
+H2 DB를 사용해 빠르게 동작을 확인할 수 있도록 구성했습니다.
+
 ## 2. Thymeleaf + HTML로 간단한 프론트엔드 개발
 ```
 # 역할
@@ -160,10 +173,13 @@ Spring Boot 3.x, Spring Web, Spring Data JPA, H2DB
 6. thymeleaf 문법은 기본적인 것만 사용해줘.
 ```
 
+백엔드에서 구현한 ToDoList CRUD API를 기반으로 Thymeleaf + HTML을 활용하여 간단한 화면을 구성했습니다.
+서버에서 전달한 데이터를 Model로 받아 목록 조회, 등록, 완료 처리까지 서버 사이드 렌더링 흐름으로 가져갔습니다.
+
 ## 3. 세션기반 로그인/ 회원가입 개발
 ```
 # 역할
-너는 Spring Boot 백엔드 개발자야. 기존에 만든 투두 리스트 서버에 세션 기반 회원가입/로그인 기능을 연동할 거야.
+너는 Spring Boot 백엔드 개발자야. 기존에 만든 ToDoList 서버에 세션 기반 회원가입/로그인 기능을 연동할 거야.
 로그인한 사용자만 자신의 투두 목록을 조회, 생성, 수정, 삭제할 수 있게 해줘.
 
 # 현재 상황
@@ -203,7 +219,14 @@ Spring Boot 3.x, Spring Web, Spring Data JPA, H2DB
 - 로그인된 유저의 닉네임을 list.html에 출력해줘
 - 로그인하지 않은 사용자가 /todos 등에 접근하면 /login으로 리다이렉트
 
+```
+
+기존 투두 CRUD에 세션 기반 회원가입/로그인을 붙여
+로그인한 사용자만 자신의 투두를 관리할 수 있도록 권한을 부여했습니다.
+
 ## 결과
 
-```
+***
+<br>
+
 # 마무리하여
