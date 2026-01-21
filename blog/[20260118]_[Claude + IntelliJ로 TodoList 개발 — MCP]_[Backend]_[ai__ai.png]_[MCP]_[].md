@@ -18,7 +18,7 @@
 ## LLM & Agent
 MCP를 이해하려면 먼저 LLM과 Agent에 대해서 이해해야 한다.
 
-[
+![
 claude
 ](./img/mcp/mcp1.png)
 
@@ -33,7 +33,7 @@ LLM (Large Language Model)은 기본적으로 학습 당시에 습득된 지식�
 MCP에 대해서 정확하게 이해하려면, MCP는 정확하게 이야기 하면 Protocol이다. JSON-RPC/HTTP 를 이용하는 LLM 애플리케이션과 Tool 서버가 어떻게 통신하는지를 정의한 규약이다.
 이 말은 이 규약만 따르면 어떤 SDK나 어떤 프로그래밍 언어등 사용할 수 있다는 것이다.
 
-[
+![
 claude
 ](./img/mcp/mcp2.png)
 
@@ -96,13 +96,13 @@ MCP Server는 이 요청을 받아 IntelliJ를 통해 실제 프로젝트 파일
 
 ## IntelliJ MCP Server 플러그인 설치
 
-[
+![
 claude
 ](./img/mcp/mcp3.png)
 
 ## Claude 연동
 
-[
+![
 claude
 ](./img/mcp/mcp4.png)
 
@@ -122,7 +122,7 @@ claude
 ## 연동 확인
 
 
-[
+![
 claude
 ](./img/mcp/mcp1.png)
 
