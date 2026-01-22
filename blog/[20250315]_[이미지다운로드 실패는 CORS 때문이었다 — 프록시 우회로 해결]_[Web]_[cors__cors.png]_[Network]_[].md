@@ -138,6 +138,17 @@ Access-Control-Allow-Origin: *
 - 외부 서버가 200을 반환하면 그 응답 바디를 inputSteam으로 읽고 byte[]로 반환
 - 결국에는 브라우저가 이 바이트 데이터를 우리 서버가 보냇기 때문에 <strong>Same-Origin</strong> 리소스로 판단  
 
+## 결과
+
+![
+다운로드 성공
+](./img/cors/download1.png)
+
+![
+다운로드 결과
+](./img/cors/download2.png)
+
+
 ***
 <br>
 <br>
@@ -151,10 +162,3 @@ html2canvas는 편리한 라이브러리지만 브라우저의 CORS 정책과 �
 
 결과적으로 외부 이미지가 포함된 페이지라도 문제없이 DOM 전체를 이미지로 변환할 수 있게 되었고 악명높은 CORS 에러를 해결할 수 있어서 뿌듯했습니다.
 
-![
-다운로드 성공
-](./img/cors/download1.png)
-
-![
-다운로드 결과
-](./img/cors/download2.png)
