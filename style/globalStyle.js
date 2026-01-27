@@ -5,23 +5,23 @@ const menuListStyle = `md:ml-10 text-base leading-snug text-surface hover:text-g
 const mobileMenuStyle = `m-0 block py-4 px-6`;
 
 // blog style과 notebook style - dev-coco 스타일 노트 형식
-const posth1Style = `text-[40px] font-bold mb-6 mt-10 pb-4 pt-6 border-t-[3px] border-gray-300`;
-const posth2Style = `text-[32px] font-bold mb-5 mt-8 pb-3 pt-5 border-t-[3px] border-gray-300`;
+const posth1Style = `text-[40px] font-bold mb-6 mt-10 pb-4 pt-6 border-t-[3px] border-primary`;
+const posth2Style = `text-[32px] font-bold mb-5 mt-8 pb-3 pt-5 border-t-[3px] border-gray-400`;
 const posth3Style = `text-[28px] font-bold mb-4 mt-7 pb-3 pt-4 border-t-[2px] border-gray-300`;
 const posth4Style = `text-2xl font-bold mb-3 mt-6 pb-2 pt-3 border-t-[2px] border-gray-200`;
 const posth5Style = `text-xl font-bold mb-2 mt-5 pb-2 pt-2 border-t border-gray-200`;
 const posth6Style = `text-lg font-bold mb-2 mt-4 pb-1 pt-2 border-t border-gray-100`;
 
-const postpStyle = `text-lg my-0 py-4 font-normal tracking-wide text-justify leading-relaxed border-t border-gray-200`;
-const postimgStyle = `border-4 border-graylv1 rounded-lg my-6 mx-auto block max-w-full h-auto align-middle shadow-md`;
+const postpStyle = `text-lg my-6 font-normal tracking-wide text-justify leading-relaxed`;
+const postimgStyle = `border-4 border-graylv1 rounded-lg my-10 mx-auto block max-w-full h-auto align-middle shadow-md`;
 const postaStyle = `text-lg text-primary underline hover:bg-activation transition duration-200`;
 
-const postulStyle = `list-disc list-inside text-lg font-normal tracking-wide text-justify my-0 py-4 pl-2 border-t border-gray-200`;
-const postolStyle = `list-decimal list-inside text-lg font-normal tracking-wide text-justify my-0 py-4 pl-2 border-t border-gray-200`;
+const postulStyle = `list-disc list-inside text-lg font-normal tracking-wide text-justify my-4 pl-2`;
+const postolStyle = `list-decimal list-inside text-lg font-normal tracking-wide text-justify my-4 pl-2`;
 const postliStyle = `pl-4 mb-2 leading-relaxed tracking-wide text-justify`;
 
-const postblockquoteStyle = `border-l-4 border-primary pl-4 py-4 my-0 bg-blue-50/30 rounded-r border-t border-gray-200`;
-const postpreStyle = `relative bg-graylv1 p-4 rounded-[10px] my-0 py-4 text-base font-medium overflow-auto whitespace-pre-wrap break-words text-justify max-w-full h-auto align-middle border-t border-gray-200`;
+const postblockquoteStyle = `border-l-4 border-primary pl-4 py-2 my-4 bg-blue-50/30 rounded-r`;
+const postpreStyle = `relative bg-graylv1 p-4 rounded-[10px] mb-6 mt-4 text-base font-medium overflow-auto whitespace-pre-wrap break-words text-justify max-w-full h-auto align-middle border-l-2 border-primary shadow-sm`;
 const postcodeStyle = `font-mono text-base bg-transparent`;
 
 const posttableStyle = `table-auto w-auto border-collapse mb-6 h-auto align-middle border-graylv2 text-left`;
