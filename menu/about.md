@@ -1,4 +1,0 @@
-
-![
-tech
-](./img/tech.png)
