@@ -661,7 +661,12 @@ async function initialize() {
     } else if (url.search.split("=")[0] === "?post") {
       document.getElementById("contents").style.display = "block";
       document.getElementById("blog-posts").style.display = "none";
-      
+
+      if (blogList.length === 0) {
+        await initDataBlogList();
+      }
+
+
       const postSlug = decodeURIComponent(url.search.split("=")[1]);
       
       // slug가 날짜로 시작하면 새로운 형식 (20251213-excel-oom)
