@@ -121,6 +121,36 @@ function styleMarkdown(kinds, text, title_info = null) {
     .forEach((strong) => strong.classList.add(...poststrongStyle.split(" ")));
 
   if (kinds === "post") {
+    // title_info가 null이면 기본값 사용
+    if (!title_info) {
+      console.error("title_info is null");
+      // 기본 섹션만 추가하고 종료
+      const contentsDiv = document.getElementById("contents");
+      while (contentsDiv.firstChild) {
+        contentsDiv.removeChild(contentsDiv.firstChild);
+      }
+      contentsDiv.appendChild(tempDiv);
+      
+      // 댓글 섹션 추가 (Utterances)
+      const commentsSection = document.createElement("div");
+      commentsSection.id = "comments";
+      commentsSection.classList.add("mt-20", "mb-10");
+      
+      const commentsScript = document.createElement("script");
+      commentsScript.src = "https://utteranc.es/client.js";
+      commentsScript.setAttribute("repo", "chaejongyun77/blog");
+      commentsScript.setAttribute("issue-term", "pathname");
+      commentsScript.setAttribute("theme", "github-light");
+      commentsScript.setAttribute("crossorigin", "anonymous");
+      commentsScript.async = true;
+      
+      commentsSection.appendChild(commentsScript);
+      contentsDiv.appendChild(commentsSection);
+      
+      hljs.highlightAll();
+      return;
+    }
+    
     // 일반 마크다운 블로그 포스트
     const title_section = document.createElement("div");
 
@@ -340,6 +370,36 @@ function styleJupyter(kinds, text, title_info = null) {
   }
 
   if (kinds === "post") {
+    // title_info가 null이면 기본값 사용
+    if (!title_info) {
+      console.error("title_info is null");
+      // 기본 섹션만 추가하고 종료
+      const contentsDiv = document.getElementById("contents");
+      while (contentsDiv.firstChild) {
+        contentsDiv.removeChild(contentsDiv.firstChild);
+      }
+      contentsDiv.appendChild(tempDiv);
+      
+      // 댓글 섹션 추가 (Utterances)
+      const commentsSection = document.createElement("div");
+      commentsSection.id = "comments";
+      commentsSection.classList.add("mt-20", "mb-10");
+      
+      const commentsScript = document.createElement("script");
+      commentsScript.src = "https://utteranc.es/client.js";
+      commentsScript.setAttribute("repo", "chaejongyun77/blog");
+      commentsScript.setAttribute("issue-term", "pathname");
+      commentsScript.setAttribute("theme", "github-light");
+      commentsScript.setAttribute("crossorigin", "anonymous");
+      commentsScript.async = true;
+      
+      commentsSection.appendChild(commentsScript);
+      contentsDiv.appendChild(commentsSection);
+      
+      hljs.highlightAll();
+      return;
+    }
+    
     // 일반 마크다운 블로그 포스트
     const title_section = document.createElement("div");
 

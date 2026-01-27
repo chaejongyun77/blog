@@ -626,16 +626,18 @@ async function initialize() {
     
     TODO: URL 파싱 결과 상세 블로그나 메뉴상태이면 검색 버튼을 누르기 전까지는 initDataBlogList()를 실행시킬 필요 없음. 이를 통해 API 호출 한 번을 아낄 수 있음.
     */
-  if (!url.search.split("=")[1] || url.search.split("=")[1] === "blog.md") {
-    // 메뉴 로딩
+  
+  // URLSearchParams를 사용한 안전한 파라미터 파싱
+  const urlParams = new URLSearchParams(url.search);
+  const menuParam = urlParams.get('menu');
+  const postParam = urlParams.get('post');
+  
+  if (!menuParam && !postParam) {
+    // 메인 페이지
     await initDataBlogMenu();
     renderMenu();
-
-    // 블로그 리스트 로딩
     await initDataBlogList();
     renderBlogList();
-
-    // 블로그 카테고리 로딩
     renderBlogCategory();
   } else {
     // 메뉴 로딩
@@ -643,22 +645,21 @@ async function initialize() {
     renderMenu();
 
     // 블로그 상세 정보 로딩
-    if (url.search.split("=")[0] === "?menu") {
+    if (menuParam) {
       document.getElementById("blog-posts").style.display = "none";
       document.getElementById("contents").style.display = "block";
       try {
-        fetch(origin + "menu/" + url.search.split("=")[1])
+        fetch(origin + "menu/" + menuParam)
           .then((response) => response.text())
           .then((text) => styleMarkdown("menu", text))
           .then(() => {
-            // 렌더링 후에는 URL 변경(query string으로 블로그 포스트 이름 추가)
             const url = new URL(window.location.href);
             window.history.pushState({}, "", url);
           });
       } catch (error) {
         styleMarkdown("menu", "# Error입니다. 파일명을 확인해주세요.");
       }
-    } else if (url.search.split("=")[0] === "?post") {
+    } else if (postParam) {
       document.getElementById("contents").style.display = "block";
       document.getElementById("blog-posts").style.display = "none";
 
@@ -667,7 +668,7 @@ async function initialize() {
         await initDataBlogList();
       }
 
-      const postSlug = decodeURIComponent(url.search.split("=")[1]);
+      const postSlug = decodeURIComponent(postParam);
       
       // slug가 날짜로 시작하면 새로운 형식 (20251213-대용량-엑셀...)
       // 그렇지 않으면 기존 형식 (전체 파일명)
