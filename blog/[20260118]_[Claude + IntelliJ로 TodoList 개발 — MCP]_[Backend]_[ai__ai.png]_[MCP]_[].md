@@ -152,7 +152,7 @@ claude
 ***
 <br>
 
-# ToDoList를 어떻게 만들었는지 흐름 정리
+# ToDoList 프롬프트 설계
 
 ## 1. 투두 리스트 CRUD 서버 개발 (Spring Boot + JPA + H2)
 ```
