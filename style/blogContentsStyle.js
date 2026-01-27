@@ -196,6 +196,24 @@ function styleMarkdown(kinds, text, title_info = null) {
   }
   contentsDiv.appendChild(tempDiv);
 
+  // 댓글 섹션 추가 (Utterances)
+  if (kinds === "post") {
+    const commentsSection = document.createElement("div");
+    commentsSection.id = "comments";
+    commentsSection.classList.add("mt-20", "mb-10");
+    
+    const commentsScript = document.createElement("script");
+    commentsScript.src = "https://utteranc.es/client.js";
+    commentsScript.setAttribute("repo", "chaejongyun77/blog"); // 여기를 본인 저장소로 변경
+    commentsScript.setAttribute("issue-term", "pathname");
+    commentsScript.setAttribute("theme", "github-light");
+    commentsScript.setAttribute("crossorigin", "anonymous");
+    commentsScript.async = true;
+    
+    commentsSection.appendChild(commentsScript);
+    contentsDiv.appendChild(commentsSection);
+  }
+
   hljs.highlightAll();
 }
 
