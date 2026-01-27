@@ -329,7 +329,7 @@ function renderBlogList(searchResult = null, currentPage = 1) {
           // console.log(post.download_url)
           let postDownloadUrl;
           if (!isLocal && localDataUsing) {
-            postDownloadUrl = `${url.origin}/${siteConfig.repositoryName}${post.download_url}`;
+            postDownloadUrl = `${url.origin}/${siteConfig.repositoryName}/${post.download_url}`;
           } else {
             postDownloadUrl = post.download_url;
           }
@@ -379,8 +379,7 @@ function renderOtherContents(menu) {
   // console.log(menu.download_url)
   let menuDownloadUrl;
   if (!isLocal && localDataUsing) {
-    menuDownloadUrl =
-      menu.download_url = `${url.origin}/${siteConfig.repositoryName}${menu.download_url}`;
+    menuDownloadUrl = `${url.origin}/${siteConfig.repositoryName}/${menu.download_url}`;
   } else {
     menuDownloadUrl = menu.download_url;
   }
