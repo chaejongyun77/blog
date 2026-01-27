@@ -1,3 +1,135 @@
+/* ============================================
+   기본 스타일 및 스크롤 애니메이션
+   ============================================ */
+
+/* 부드러운 스크롤 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 전체 배경 그라데이션 */
+body {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f3f5fa 100%);
+  min-height: 100vh;
+}
+
+/* ============================================
+   카드 호버 애니메이션 강화
+   ============================================ */
+
+/* 블로그 카드 호버 효과 */
+.blog-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.blog-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 카드 이미지 줌 효과 */
+.blog-card-img-wrapper {
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.blog-card-img {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.blog-card:hover .blog-card-img {
+  transform: scale(1.1);
+}
+
+/* ============================================
+   버튼 호버 효과
+   ============================================ */
+
+/* 카테고리 버튼 */
+.category-badge {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.category-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.category-badge:hover::before {
+  left: 100%;
+}
+
+/* ============================================
+   헤더 스타일 강화
+   ============================================ */
+
+header {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+header.scrolled {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   검색창 애니메이션
+   ============================================ */
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-input-wrapper::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #2e6ff2, #4f8aff);
+  transition: width 0.3s ease;
+}
+
+.search-input-wrapper:focus-within::before {
+  width: 100%;
+}
+
+/* ============================================
+   페이지네이션 스타일
+   ============================================ */
+
+.page-number {
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+}
+
+.page-number:hover {
+  background-color: #dee8ff;
+  transform: scale(1.1);
+}
+
+.page-number.active {
+  background: linear-gradient(135deg, #2e6ff2 0%, #4f8aff 100%);
+  color: white !important;
+  font-weight: bold;
+}
+
+/* ============================================
+   아이콘 버튼 스타일
+   ============================================ */
+
 #menu-button {
   width: 1.75rem;
   height: 1.75rem;
@@ -12,9 +144,12 @@
   mask-size: 100%;
   mask-repeat: no-repeat;
   mask-position: center center;
+  transition: all 0.2s ease;
 }
+
 #menu-button:hover, #menu-button.active {
   background-color: #121314;
+  transform: rotate(90deg);
 }
 
 #search-button {
@@ -30,9 +165,12 @@
   mask-size: 100%;
   mask-repeat: no-repeat;
   mask-position: center center;
+  transition: all 0.2s ease;
 }
+
 #search-button:hover, #search-button.active {
   background-color: #121314;
+  transform: scale(1.1);
 }
 
 .search-inp-btn {
@@ -49,14 +187,18 @@
   mask-size: 100%;
   mask-repeat: no-repeat;
   mask-position: center center;
+  transition: all 0.2s ease;
 }
+
 @media screen and (min-width: 768px) {
   .search-inp-btn {
     background-color: #47494d;
   }
 }
+
 .search-inp-btn:hover, .search-inp-btn.active {
   background-color: #47494d;
+  transform: scale(1.1);
 }
 
 .reset-inp-btn {
@@ -66,7 +208,9 @@
   align-items: center;
   background-color: #d9dbe0;
   border-radius: 50%;
+  transition: all 0.2s ease;
 }
+
 .reset-inp-btn::after {
   content: "";
   width: 100%;
@@ -81,8 +225,10 @@
   mask-repeat: no-repeat;
   mask-position: center center;
 }
+
 .reset-inp-btn:hover, .reset-inp-btn.active {
   background-color: #47494d;
+  transform: rotate(90deg);
 }
 
 #copy-button {
@@ -91,10 +237,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
+
 #copy-button:hover::after, #copy-button.active::after {
   background-color: #121314;
 }
+
+#copy-button:hover {
+  transform: scale(1.1);
+}
+
 #copy-button::after {
   content: "";
   width: 100%;
@@ -119,10 +272,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
+
 #aside-button:active, #aside-button:focus {
   outline: none;
 }
+
+#aside-button:hover {
+  transform: scale(1.05);
+}
+
 #aside-button::after {
   content: "";
   width: 24px;
@@ -154,7 +314,13 @@
 
 #page-prev {
   display: flex;
+  transition: all 0.2s ease;
 }
+
+#page-prev:hover {
+  transform: translateX(-3px);
+}
+
 #page-prev::after {
   content: "";
   width: 20px;
@@ -169,6 +335,7 @@
   mask-repeat: no-repeat;
   mask-position: center center;
 }
+
 #page-prev:hover::after {
   background-color: #47494d;
   -webkit-mask-image: url("../img/icon/icon-prev.svg");
@@ -180,6 +347,7 @@
   mask-repeat: no-repeat;
   mask-position: center center;
 }
+
 #page-prev:disabled::after {
   background-color: #d9dbe0;
   -webkit-mask-image: url("../img/icon/icon-prev.svg");
@@ -194,7 +362,13 @@
 
 #page-next {
   display: flex;
+  transition: all 0.2s ease;
 }
+
+#page-next:hover {
+  transform: translateX(3px);
+}
+
 #page-next::after {
   content: "";
   width: 20px;
@@ -209,6 +383,7 @@
   mask-repeat: no-repeat;
   mask-position: center center;
 }
+
 #page-next:hover::after {
   background-color: #47494d;
   -webkit-mask-image: url("../img/icon/icon-next.svg");
@@ -220,6 +395,7 @@
   mask-repeat: no-repeat;
   mask-position: center center;
 }
+
 #page-next:disabled::after {
   background-color: #d9dbe0;
   -webkit-mask-image: url("../img/icon/icon-next.svg");
@@ -230,4 +406,63 @@
   mask-size: 100%;
   mask-repeat: no-repeat;
   mask-position: center center;
-}/*# sourceMappingURL=style.css.map */
+}
+
+/* ============================================
+   페이드인 애니메이션
+   ============================================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* ============================================
+   카테고리 사이드바 애니메이션
+   ============================================ */
+
+.category-aside {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-aside.active {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ============================================
+   로딩 애니메이션 (선택사항)
+   ============================================ */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
