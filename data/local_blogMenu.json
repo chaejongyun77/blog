@@ -1,10 +1,10 @@
 [
     {
         "name": "about.md",
-        "download_url": "/blog/menu/about.md"
+        "download_url": "menu/about.md"
     },
     {
         "name": "blog.md",
-        "download_url": "/blog/menu/blog.md"
+        "download_url": "menu/blog.md"
     }
 ]
