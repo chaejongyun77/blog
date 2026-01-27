@@ -342,10 +342,11 @@ function renderBlogList(searchResult = null, currentPage = 1) {
                   : styleJupyter("post", text, postInfo)
               )
               .then(() => {
-                // 렌더링 후에는 URL 변경(query string으로 블로그 포스트 이름 추가)
-                const url = new URL(origin);
-                url.searchParams.set("post", post.name);
-                window.history.pushState({}, "", url);
+                // 렌더링 후에는 URL 변경 (깔끔한 slug 사용)
+                const slug = generateSlug(postInfo);
+                const newUrl = new URL(origin);
+                newUrl.searchParams.set("post", slug);
+                window.history.pushState({}, "", newUrl);
               });
           } catch (error) {
             styleMarkdown("post", "# Error입니다. 파일명을 확인해주세요.");
@@ -660,24 +661,41 @@ async function initialize() {
     } else if (url.search.split("=")[0] === "?post") {
       document.getElementById("contents").style.display = "block";
       document.getElementById("blog-posts").style.display = "none";
-      postNameDecode = decodeURI(url.search.split("=")[1]).replaceAll("+", " ");
-      // console.log(postNameDecode);
-      postInfo = extractFileInfo(postNameDecode);
-      try {
-        fetch(origin + "blog/" + postNameDecode)
-          .then((response) => response.text())
-          .then((text) =>
-            postInfo.fileType === "md"
-              ? styleMarkdown("post", text, postInfo)
-              : styleJupyter("post", text, postInfo)
-          )
-          .then(() => {
-            // 렌더링 후에는 URL 변경(query string으로 블로그 포스트 이름 추가)
-            const url = new URL(window.location.href);
-            window.history.pushState({}, "", url);
-          });
-      } catch (error) {
-        styleMarkdown("post", "# Error입니다. 파일명을 확인해주세요.");
+      
+      const postSlug = decodeURIComponent(url.search.split("=")[1]);
+      
+      // slug가 날짜로 시작하면 새로운 형식 (20251213-excel-oom)
+      // 그렇지 않으면 기존 형식 (전체 파일명)
+      let postToLoad = null;
+      
+      if (/^\d{8}-/.test(postSlug)) {
+        // 새로운 slug 형식
+        postToLoad = findPostBySlug(postSlug);
+      } else {
+        // 기존 파일명 형식 (하위 호환)
+        const postNameDecode = postSlug.replaceAll("+", " ");
+        postToLoad = blogList.find(p => p.name === postNameDecode);
+      }
+      
+      if (postToLoad) {
+        postInfo = extractFileInfo(postToLoad.name);
+        try {
+          fetch(origin + "blog/" + postToLoad.name)
+            .then((response) => response.text())
+            .then((text) =>
+              postInfo.fileType === "md"
+                ? styleMarkdown("post", text, postInfo)
+                : styleJupyter("post", text, postInfo)
+            )
+            .then(() => {
+              const url = new URL(window.location.href);
+              window.history.pushState({}, "", url);
+            });
+        } catch (error) {
+          styleMarkdown("post", "# Error입니다. 파일명을 확인해주세요.");
+        }
+      } else {
+        styleMarkdown("post", "# 포스트를 찾을 수 없습니다.");
       }
     }
   }

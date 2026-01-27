@@ -77,3 +77,28 @@ function formatDate(dateString) {
 
   return `${year}/${month}/${day}`;
 }
+
+function generateSlug(postInfo) {
+  // 포스트 정보를 받아서 깔끔한 URL slug 생성
+  // 예: "20251213-excel-oom"
+  const date = postInfo.date;
+  const title = postInfo.title
+    .toLowerCase()
+    .replace(/\s+/g, '-')           // 공백을 -로
+    .replace(/[^a-z0-9가-힣-]/g, '') // 특수문자 제거
+    .substring(0, 50);              // 최대 50자
+  
+  return `${date}-${title}`;
+}
+
+function findPostBySlug(slug) {
+  // slug로 포스트 찾기
+  // "20251213-excel-oom" → 실제 파일명 찾기
+  for (const post of blogList) {
+    const postInfo = extractFileInfo(post.name);
+    if (postInfo && generateSlug(postInfo) === slug) {
+      return post;
+    }
+  }
+  return null;
+}
