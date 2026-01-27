@@ -662,16 +662,17 @@ async function initialize() {
       document.getElementById("contents").style.display = "block";
       document.getElementById("blog-posts").style.display = "none";
 
+      // 먼저 blogList 로딩
       if (blogList.length === 0) {
         await initDataBlogList();
       }
 
-
       const postSlug = decodeURIComponent(url.search.split("=")[1]);
       
-      // slug가 날짜로 시작하면 새로운 형식 (20251213-excel-oom)
+      // slug가 날짜로 시작하면 새로운 형식 (20251213-대용량-엑셀...)
       // 그렇지 않으면 기존 형식 (전체 파일명)
       let postToLoad = null;
+      let postInfo = null;
       
       if (/^\d{8}-/.test(postSlug)) {
         // 새로운 slug 형식
@@ -682,10 +683,22 @@ async function initialize() {
         postToLoad = blogList.find(p => p.name === postNameDecode);
       }
       
+      // postToLoad가 있을 때만 postInfo 추출
       if (postToLoad) {
         postInfo = extractFileInfo(postToLoad.name);
+      }
+      
+      // postToLoad와 postInfo 둘 다 있을 때만 렌더링
+      if (postToLoad && postInfo) {
         try {
-          fetch(origin + "blog/" + postToLoad.name)
+          let postDownloadUrl;
+          if (!isLocal && localDataUsing) {
+            postDownloadUrl = `${url.origin}/${siteConfig.repositoryName}/${postToLoad.download_url}`;
+          } else {
+            postDownloadUrl = postToLoad.download_url;
+          }
+          
+          fetch(postDownloadUrl)
             .then((response) => response.text())
             .then((text) =>
               postInfo.fileType === "md"
@@ -697,7 +710,8 @@ async function initialize() {
               window.history.pushState({}, "", url);
             });
         } catch (error) {
-          styleMarkdown("post", "# Error입니다. 파일명을 확인해주세요.");
+          console.error("Error loading post:", error);
+          styleMarkdown("post", "# Error입니다. 파일을 로드할 수 없습니다.");
         }
       } else {
         styleMarkdown("post", "# 포스트를 찾을 수 없습니다.");
